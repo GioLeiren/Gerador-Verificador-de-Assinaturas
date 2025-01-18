@@ -1,19 +1,24 @@
 import random
+import hashlib
+import os
+from math import ceil
 
-# Helper function to generate a large prime number with Miller-Rabin test
+# Constants
+HASH_FUNCTION = lambda x: hashlib.sha3_256(x).digest()
+HASH_LENGTH = len(HASH_FUNCTION(b''))
+
 def generate_large_prime(bits=1024):
+    # Gera um número primo aleatório de 1024 bits e o testa pelo método de Miller-Rabin
     while True:
         candidate = random.getrandbits(bits)
-        # Ensure it's odd and sufficiently large
         candidate |= (1 << bits - 1) | 1
         if miller_rabin_test(candidate):
             return candidate
 
 def miller_rabin_test(n, k=20):
-
+    # Teste que verifica primalidade de um número, usando iterações (20 como default)
     if n == 2 or n == 3:
         return True
-
     if n % 2 == 0:
         return False
 
@@ -21,12 +26,13 @@ def miller_rabin_test(n, k=20):
     while s % 2 == 0:
         r += 1
         s //= 2
-    for i in range(k):
+
+    for _ in range(k):
         a = random.randrange(2, n - 1)
         x = pow(a, s, n)
         if x == 1 or x == n - 1:
             continue
-        for j in range(r - 1):
+        for _ in range(r - 1):
             x = pow(x, 2, n)
             if x == n - 1:
                 break
@@ -34,7 +40,7 @@ def miller_rabin_test(n, k=20):
             return False
     return True
 
-# Function to calculate the modular inverse using Extended Euclidean Algorithm
+# Função para calcular o inverso modular usando o Algoritmo de Euclides Extendido (mais rápido e eficiente)
 def modular_inverse(a, m):
     m0, x0, x1 = m, 0, 1
     while a > 1:
@@ -43,55 +49,152 @@ def modular_inverse(a, m):
         x0, x1 = x1 - q * x0, x0
     return x1 + m0 if x1 < 0 else x1
 
-# RSA Key Generation
-def generate_rsa_keys(bits=1024):
-    p = generate_large_prime(bits)
-    q = generate_large_prime(bits)
+# Gerar par de chaves pública e privada para o RSA
+def generate_keys(key_size=1024):
+    p = generate_large_prime(key_size)
+    q = generate_large_prime(key_size)
+    
     n = p * q
     phi = (p - 1) * (q - 1)
-
-    # Choose e such that 1 < e < phi and gcd(e, phi) = 1
-    e = 65537  # Commonly used public exponent
-
-    # Calculate d (modular multiplicative inverse of e mod phi)
+    
+    e = 65537  # Expoente público comumente usado
     d = modular_inverse(e, phi)
-
+    
     return {
-        "public_key": (e, n),
-        "private_key": (d, n),
-        "primes": (p, q)  # For debugging purposes
+        'public_key': (e, n),
+        'private_key': (d, n),
+        "primes": (p, q)
     }
 
-# RSA Encryption with OAEP padding (Simplified)
-def oaep_encrypt(message, public_key):
+# Função de geração de mask baseado no SHA3-256
+def mgf1(seed, length):
+    if length > (2**32 * HASH_LENGTH):
+        raise ValueError("Mask too long")
+    
+    T = b''
+    for counter in range(ceil(length / HASH_LENGTH)):
+        C = counter.to_bytes(4, 'big')
+        T += HASH_FUNCTION(seed + C)
+    return T[:length]
+
+def oaep_pad(message, n):
+    # Aplica padding OAEP à mensagem
+    k = (n.bit_length() + 7) // 8  # Comprimento de n em bytes
+    mLen = len(message)
+    
+    # Checagem de comprimento
+    if mLen > k - 2 * HASH_LENGTH - 2:
+        raise ValueError("Message too long")
+    
+    # Gera padding aleatório
+    lHash = HASH_FUNCTION(b'')  # Hash da label vazia
+    PS = b'\x00' * (k - mLen - 2 * HASH_LENGTH - 2)
+    DB = lHash + PS + b'\x01' + message
+    
+    # Gera seed aleatória
+    seed = os.urandom(HASH_LENGTH)
+    
+    # Mascara DB
+    dbMask = mgf1(seed, k - HASH_LENGTH - 1)
+    maskedDB = bytes(a ^ b for a, b in zip(DB, dbMask))
+    
+    # Mascara seed
+    seedMask = mgf1(maskedDB, HASH_LENGTH)
+    maskedSeed = bytes(a ^ b for a, b in zip(seed, seedMask))
+    
+    return b'\x00' + maskedSeed + maskedDB
+
+def oaep_unpad(padded, n):
+    # Remove padding OAEP da mensagem
+    k = (n.bit_length() + 7) // 8
+    
+    # Checagem básica de formato
+    if len(padded) != k:
+        raise ValueError("Erro de decodificação")
+    if padded[0] != 0:
+        raise ValueError("Erro de decodificação")
+    
+    # Separa a mensagem
+    maskedSeed = padded[1:HASH_LENGTH + 1]
+    maskedDB = padded[HASH_LENGTH + 1:]
+    
+    # Recupera a seed
+    seedMask = mgf1(maskedDB, HASH_LENGTH)
+    seed = bytes(a ^ b for a, b in zip(maskedSeed, seedMask))
+    
+    # Recupera DB
+    dbMask = mgf1(seed, k - HASH_LENGTH - 1)
+    DB = bytes(a ^ b for a, b in zip(maskedDB, dbMask))
+    
+    # Verifica o padding
+    lHash = HASH_FUNCTION(b'')
+    if not DB.startswith(lHash):
+        raise ValueError("Erro de decodificação")
+    
+    # Acha a mensagem
+    i = HASH_LENGTH
+    while i < len(DB):
+        if DB[i] == 1:
+            return DB[i + 1:]
+        if DB[i] != 0:
+            raise ValueError("Erro de decodificação")
+        i += 1
+    raise ValueError("Erro de decodificação")
+
+def encrypt(message, public_key):
+    # Encripta a mensagem usando RSA-OAEP
     e, n = public_key
-    # Convert message to integer
-    message_int = int.from_bytes(message.encode('utf-8'), byteorder='big')
-    if message_int >= n:
-        raise ValueError("Message is too large for the key size.")
-    # Encrypt: c = m^e mod n
-    cipher_int = pow(message_int, e, n)
-    return cipher_int
+    
+    # Converte mensagem para bytes se é uma string
+    if isinstance(message, str):
+        message = message.encode('utf-8')
+    
+    # Aplica padding à mensagem
+    padded = oaep_pad(message, n)
+    
+    # Converte para inteiro e encripta
+    m_int = int.from_bytes(padded, 'big')
+    c_int = pow(m_int, e, n)
+    
+    return c_int
 
-# RSA Decryption with OAEP padding (Simplified)
-def oaep_decrypt(cipher_int, private_key):
+def decrypt(ciphertext, private_key):
+    # Decripta a mensagem usando RSA-OAEP
     d, n = private_key
-    # Decrypt: m = c^d mod n
-    message_int = pow(cipher_int, d, n)
-    # Convert integer back to string
-    message = message_int.to_bytes((message_int.bit_length() + 7) // 8, byteorder='big').decode('utf-8')
-    return message
+    
+    # Decripta
+    m_int = pow(ciphertext, d, n)
+    
+    # Converte para bytes
+    em = m_int.to_bytes((n.bit_length() + 7) // 8, 'big')
+    
+    # Tira o padding
+    message = oaep_unpad(em, n)
+    
+    # Tenta decodificar como UTF-8 se possível
+    try:
+        return message.decode('utf-8')
+    except UnicodeDecodeError:
+        return message
 
-# Example usage
+def main():
+    # Gera as chaves e imprime elas e os números primos (para debug)
+    print("Gerando chaves RSA...")
+    keys = generate_keys(key_size=1024)
+    print("Chaves geradas:", keys)
+    
+    # Mensagem de teste
+    message = "Ola, RSA-OAEP seguro!"
+    print(f"Mensagem original: {message}")
+    
+    # Encriptação
+    ciphertext = encrypt(message, keys['public_key'])
+    print(f"Mensagem encriptada (hex): {hex(ciphertext)}")
+    
+    # Decriptação
+    decrypted = decrypt(ciphertext, keys['private_key'])
+    print(f"Mensagem decriptada: {decrypted}")
+
+# Encapsulação do código em guarda para evitar possíveis problemas (em Windows)
 if __name__ == "__main__":
-    # Generate RSA keys
-    keys = generate_rsa_keys(bits=1024)
-    print("Generated Keys:", keys)
-
-    # Example encryption and decryption
-    message = "Hello, RSA!"
-    cipher = oaep_encrypt(message, keys['public_key'])
-    print("Encrypted Message:", cipher)
-
-    decrypted_message = oaep_decrypt(cipher, keys['private_key'])
-    print("Decrypted Message:", decrypted_message)
+    main()
