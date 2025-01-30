@@ -16,7 +16,9 @@ def generate_large_prime(bits=1024):
             return candidate
 
 def miller_rabin_test(n, k=20):
-    # Teste que verifica primalidade de um número, usando iterações (20 como default)
+    # Teste probabilístico de primalidade de um número, usando iterações (20 como default)
+    if n < 2:
+        return False
     if n == 2 or n == 3:
         return True
     if n % 2 == 0:
@@ -66,7 +68,7 @@ def generate_keys(key_size=1024):
         "primes": (p, q)
     }
 
-# Função de geração de mask baseado no SHA3-256
+# Função de geração de máscara para DB e para a Seed
 def mgf1(seed, length):
     if length > (2**32 * HASH_LENGTH):
         raise ValueError("Mask too long")
