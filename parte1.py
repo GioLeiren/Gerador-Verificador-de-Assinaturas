@@ -10,7 +10,7 @@ HASH_LENGTH = len(HASH_FUNCTION(b''))
 
 
 def generate_large_prime(bits=1024):
-    # Gera um número primo aleatório de 1024 bits e o testa pelo método de Miller-Rabin
+    # Gera um número primo aleatório de 1024 bits e o testa pelo metodo de Miller-Rabin
     while True:
         candidate = random.getrandbits(bits)
         candidate |= (1 << bits - 1) | 1
