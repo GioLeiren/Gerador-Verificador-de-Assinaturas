@@ -4,7 +4,6 @@ from parte2 import sign_message
 from parte3 import verify_signed_document
 
 
-
 if __name__ == "__main__":
 
     print("Gerando chaves RSA...")

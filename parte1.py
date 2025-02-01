@@ -3,9 +3,11 @@ import hashlib
 import os
 from math import ceil
 
+
 # Constants
 HASH_FUNCTION = lambda x: hashlib.sha3_256(x).digest()
 HASH_LENGTH = len(HASH_FUNCTION(b''))
+
 
 def generate_large_prime(bits=1024):
     # Gera um número primo aleatório de 1024 bits e o testa pelo método de Miller-Rabin
@@ -14,6 +16,7 @@ def generate_large_prime(bits=1024):
         candidate |= (1 << bits - 1) | 1
         if miller_rabin_test(candidate):
             return candidate
+
 
 def miller_rabin_test(n, k=20):
     # Teste probabilístico de primalidade de um número, usando iterações (20 como default)
@@ -42,6 +45,7 @@ def miller_rabin_test(n, k=20):
             return False
     return True
 
+
 # Função para calcular o inverso modular usando o Algoritmo de Euclides Extendido (mais rápido e eficiente)
 def modular_inverse(a, m):
     m0, x0, x1 = m, 0, 1
@@ -50,6 +54,7 @@ def modular_inverse(a, m):
         a, m = m, a % m
         x0, x1 = x1 - q * x0, x0
     return x1 + m0 if x1 < 0 else x1
+
 
 # Gerar par de chaves pública e privada para o RSA
 def generate_keys(key_size=1024):
@@ -68,6 +73,7 @@ def generate_keys(key_size=1024):
         "primes": (p, q)
     }
 
+
 # Função de geração de máscara para DB e para a Seed
 def mgf1(seed, length):
     if length > (2**32 * HASH_LENGTH):
@@ -78,6 +84,7 @@ def mgf1(seed, length):
         C = counter.to_bytes(4, 'big')
         T += HASH_FUNCTION(seed + C)
     return T[:length]
+
 
 def oaep_pad(message, n):
     # Aplica padding OAEP à mensagem
@@ -105,6 +112,7 @@ def oaep_pad(message, n):
     maskedSeed = bytes(a ^ b for a, b in zip(seed, seedMask))
     
     return b'\x00' + maskedSeed + maskedDB
+
 
 def oaep_unpad(padded, n):
     # Remove padding OAEP da mensagem
@@ -143,6 +151,7 @@ def oaep_unpad(padded, n):
         i += 1
     raise ValueError("Erro de decodificação")
 
+
 def encrypt(message, public_key):
     # Encripta a mensagem usando RSA-OAEP
     e, n = public_key
@@ -159,6 +168,7 @@ def encrypt(message, public_key):
     c_int = pow(m_int, e, n)
     
     return c_int
+
 
 def decrypt(ciphertext, private_key):
     # Decripta a mensagem usando RSA-OAEP
@@ -179,24 +189,3 @@ def decrypt(ciphertext, private_key):
     except UnicodeDecodeError:
         return message
 
-def main():
-    # Gera as chaves e imprime elas e os números primos (para debug)
-    print("Gerando chaves RSA...")
-    keys = generate_keys(key_size=1024)
-    print("Chaves geradas:", keys)
-    
-    # Mensagem de teste
-    message = "Ola, RSA-OAEP seguro!"
-    print(f"Mensagem original: {message}")
-    
-    # Encriptação
-    ciphertext = encrypt(message, keys['public_key'])
-    print(f"Mensagem encriptada (hex): {hex(ciphertext)}")
-    
-    # Decriptação
-    decrypted = decrypt(ciphertext, keys['private_key'])
-    print(f"Mensagem decriptada: {decrypted}")
-
-# Encapsulação do código em guarda para evitar possíveis problemas (em Windows)
-if __name__ == "__main__":
-    main()
