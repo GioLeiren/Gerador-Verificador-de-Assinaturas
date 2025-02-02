@@ -38,3 +38,7 @@ if __name__ == "__main__":
         print(f"A assinatura é válida. Mensagem original: {result}")
     else:
         print(f"A assinatura é inválida. Erro: {result}")
+
+    input("------------------------------\n"
+          "Pressione Enter para sair...")
+
