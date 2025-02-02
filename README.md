@@ -29,9 +29,9 @@ Este projeto implementa um **Gerador e Verificador de Assinaturas Digitais** uti
 - **`Relatório.pdf`** → Relatório detalhado sobre a implementação e funcionamento do sistema.
 - **`Slides.pdf`** → Apresentação utilizada para demonstrar o projeto.
 
-## 🛠️ **Requisitos**
-- **Python 3.8+**
-- **Nenhuma biblioteca externa precisa ser instalada**, pois o projeto utiliza apenas bibliotecas nativas do Python (`random`, `hashlib`, `os`, `math`, `base64`).
+## **Requisitos**
+- Python 3.8+
+- Nenhuma biblioteca externa precisa ser instalada, pois o projeto utiliza apenas bibliotecas nativas do Python (`random`, `hashlib`, `os`, `math`, `base64`).
 
 ## Como Executar o Projeto
 
