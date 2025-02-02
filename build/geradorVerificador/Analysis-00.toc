@@ -2,7 +2,7 @@
   'Computacional\\Gerador-Verificador-de-Assinaturas\\geradorVerificador.py'],
  ['C:\\Users\\giuli\\OneDrive\\Área de Trabalho\\Unb\\2024.2\\Segurança '
   'Computacional\\Gerador-Verificador-de-Assinaturas'],
- [],
+ ['parte1', 'parte2', 'parte3'],
  [('C:\\Users\\giuli\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\numpy\\_pyinstaller',
    0),
   ('C:\\Users\\giuli\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks',
@@ -16,10 +16,7 @@
  {},
  0,
  [],
- [('documento.txt',
-   'C:\\Users\\giuli\\OneDrive\\Área de Trabalho\\Unb\\2024.2\\Segurança '
-   'Computacional\\Gerador-Verificador-de-Assinaturas\\documento.txt',
-   'DATA')],
+ [],
  '3.12.5 (tags/v3.12.5:ff3bc82, Aug  6 2024, 20:45:27) [MSC v.1940 64 bit '
  '(AMD64)]',
  [('pyi_rth_inspect',
@@ -320,9 +317,6 @@
   ('ast',
    'C:\\Users\\giuli\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\ast.py',
    'PYMODULE'),
-  ('_py_abc',
-   'C:\\Users\\giuli\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_py_abc.py',
-   'PYMODULE'),
   ('stringprep',
    'C:\\Users\\giuli\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\stringprep.py',
    'PYMODULE'),
@@ -334,6 +328,9 @@
    'PYMODULE'),
   ('tracemalloc',
    'C:\\Users\\giuli\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\tracemalloc.py',
+   'PYMODULE'),
+  ('_py_abc',
+   'C:\\Users\\giuli\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_py_abc.py',
    'PYMODULE'),
   ('parte3',
    'C:\\Users\\giuli\\OneDrive\\Área de Trabalho\\Unb\\2024.2\\Segurança '
@@ -382,11 +379,7 @@
    'BINARY')],
  [],
  [],
- [('documento.txt',
-   'C:\\Users\\giuli\\OneDrive\\Área de Trabalho\\Unb\\2024.2\\Segurança '
-   'Computacional\\Gerador-Verificador-de-Assinaturas\\documento.txt',
-   'DATA'),
-  ('base_library.zip',
+ [('base_library.zip',
    'C:\\Users\\giuli\\OneDrive\\Área de Trabalho\\Unb\\2024.2\\Segurança '
    'Computacional\\Gerador-Verificador-de-Assinaturas\\build\\geradorVerificador\\base_library.zip',
    'DATA')])
